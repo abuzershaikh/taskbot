@@ -34,14 +34,18 @@ class AppGridState extends State<AppGrid> {
     // This map is owned by PhoneMockupContainerState.
     for (var appData in _initialApps) {
       final appName = appData['name']!;
-      if (!widget.appItemKeys.containsKey(appName)) {
-        widget.appItemKeys[appName] = GlobalKey<ClickableOutlineState>(debugLabel: appName);
+      final prefixedKeyName = "appgrid_$appName";
+      if (!widget.appItemKeys.containsKey(prefixedKeyName)) {
+        widget.appItemKeys[prefixedKeyName] = GlobalKey<ClickableOutlineState>(debugLabel: prefixedKeyName);
       }
     }
   }
 
   // Method to get app details by name, callable from outside via appGridKey
   Map<String, String>? getAppByName(String appName) {
+    // Note: This method might need adjustment if appName is expected without prefix elsewhere.
+    // For now, it's used by PhoneMockupContainer to get details before navigating to AppInfo,
+    // and AppInfo receives the original appName.
     return _apps.firstWhere(
       (app) => app['name'] == appName,
       orElse: () => {}, // Return empty map if not found
@@ -149,18 +153,18 @@ class AppGridState extends State<AppGrid> {
         itemCount: _apps.length,
         itemBuilder: (context, index) {
           final app = _apps[index];
-          // Retrieve the key from the widget.appItemKeys map.
-          // It should have been populated in initState by PhoneMockupContainerState
-          // or by the AppGrid's initState itself ensuring all _initialApps have keys.
-          final appKey = widget.appItemKeys[app['name']!];
+          // Retrieve the key from the widget.appItemKeys map using the prefixed name.
+          final appName = app['name']!;
+          final prefixedKeyName = "appgrid_$appName";
+          final appKey = widget.appItemKeys[prefixedKeyName];
 
           // Assert that the key is not null, as it should have been initialized.
-          assert(appKey != null, "Key for ${app['name']} should not be null.");
+          assert(appKey != null, "Key for $prefixedKeyName should not be null.");
 
           return ClickableOutline(
             key: appKey!, // Assign the GlobalKey here.
             onTap: () {
-              widget.onAppSelected(app['name']!);
+              widget.onAppSelected(appName); // Use original appName for selection event
             },
             onLongPress: () {
               widget.onAppLongPress(app);

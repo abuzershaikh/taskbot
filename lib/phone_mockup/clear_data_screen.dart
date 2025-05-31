@@ -1,4 +1,3 @@
-// File: lib/phone_mockup/clear_data_screen.dart
 import 'package:flutter/material.dart';
 import 'clickable_outline.dart'; // Import the new file
 
@@ -13,12 +12,14 @@ class ClearDataScreen extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onPerformClearData;
   final VoidCallback onPerformClearCache;
-  final void Function(Widget dialog) showDialog; // From PhoneMockupContainer
+  final void Function(Widget dialog, {Map<String, GlobalKey<ClickableOutlineState>>? dialogSpecificOutlineKeys}) showDialog; // Updated signature
   final void Function() dismissDialog; // From PhoneMockupContainer
+  final Map<String, GlobalKey<ClickableOutlineState>> activeOutlineKeys; // Added field
 
   const ClearDataScreen({
     super.key,
     required this.appName,
+    required this.activeOutlineKeys, // Added parameter
     required this.appVersion,
     required this.appIconPath,
     required this.initialTotalSize,
@@ -35,12 +36,24 @@ class ClearDataScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('ClearDataScreen: build method called for app: $appName'); // DEBUG
+
+    GlobalKey<ClickableOutlineState> _registerKey(String keyName, dynamic widget) {
+      final key = GlobalKey<ClickableOutlineState>(debugLabel: keyName);
+      widget.activeOutlineKeys[keyName] = key;
+      return key;
+    }
+
+    final backButtonKey = _registerKey("cleardata_back_button", this);
+    final clearDataRowKey = _registerKey("cleardata_clear_data_row", this);
+    final clearCacheRowKey = _registerKey("cleardata_clear_cache_row", this);
+    
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
         elevation: 0,
-        leading: ClickableOutline( // Apply outline to back button
+        leading: ClickableOutline(
+          key: backButtonKey, // Assign key
           onTap: onBack,
           child: const Padding(
             padding: EdgeInsets.all(8.0),
@@ -93,50 +106,88 @@ class ClearDataScreen extends StatelessWidget {
 
             // Clear data/cache buttons
             _buildInfoCard([
-              ClickableOutline( // Apply outline to Clear data
+              ClickableOutline(
+                key: clearDataRowKey, // Assign key
                 onTap: () {
                   print('ClearDataScreen: Clear data button tapped. Calling showDialog...'); // DEBUG
+                  final cancelKey = GlobalKey<ClickableOutlineState>(debugLabel: "dialog_cleardata_confirm_cancel");
+                  final confirmKey = GlobalKey<ClickableOutlineState>(debugLabel: "dialog_cleardata_confirm_delete");
+                  final dialogKeys = {
+                    "dialog_cleardata_confirm_cancel": cancelKey,
+                    "dialog_cleardata_confirm_delete": confirmKey,
+                  };
+
                   showDialog(
                     AlertDialog(
                       title: const Text('Clear app data?'),
                       content: const Text('This app\'s data, including files and settings, will be permanently deleted from this device.'),
                       actions: [
-                        TextButton(
-                          onPressed: dismissDialog,
-                          child: const Text('Cancel'),
+                        ClickableOutline(
+                          key: cancelKey,
+                          onTap: dismissDialog,
+                          child: TextButton(
+                            onPressed: dismissDialog,
+                            child: const Text('Cancel'),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () {
+                        ClickableOutline(
+                          key: confirmKey,
+                          onTap: () {
                             dismissDialog();
                             onPerformClearData();
                           },
-                          child: const Text('Delete'),
+                          child: TextButton(
+                            onPressed: () {
+                              dismissDialog();
+                              onPerformClearData();
+                            },
+                            child: const Text('Delete'),
+                          ),
                         ),
                       ],
                     ),
+                    dialogSpecificOutlineKeys: dialogKeys,
                   );
                 },
                 child: _buildButtonRow(Icons.delete_outline, 'Clear data', 'Delete all app data'),
               ),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              ClickableOutline( // Apply outline to Clear cache
+              ClickableOutline(
+                key: clearCacheRowKey, // Assign key
                 onTap: () {
                   print('ClearDataScreen: Clear cache button tapped. Calling showDialog...'); // DEBUG
+                  final cancelKey = GlobalKey<ClickableOutlineState>(debugLabel: "dialog_clearcache_confirm_cancel");
+                  final confirmKey = GlobalKey<ClickableOutlineState>(debugLabel: "dialog_clearcache_confirm_clear");
+                  final dialogKeys = {
+                    "dialog_clearcache_confirm_cancel": cancelKey,
+                    "dialog_clearcache_confirm_clear": confirmKey,
+                  };
                   showDialog(
                     AlertDialog(
                       title: const Text('Clear cache?'),
                       content: const Text('This will clear the cached data for the app.'),
                       actions: [
-                        TextButton(
-                          onPressed: dismissDialog,
-                          child: const Text('Cancel'),
+                        ClickableOutline(
+                          key: cancelKey,
+                          onTap: dismissDialog,
+                          child: TextButton(
+                            onPressed: dismissDialog,
+                            child: const Text('Cancel'),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () {
+                        ClickableOutline(
+                          key: confirmKey,
+                          onTap: () {
                             dismissDialog();
                             onPerformClearCache();
                           },
-                          child: const Text('Clear Cache'),
+                          child: TextButton(
+                            onPressed: () {
+                              dismissDialog();
+                              onPerformClearCache();
+                            },
+                            child: const Text('Clear Cache'),
+                          ),
                         ),
                       ],
                     ),
