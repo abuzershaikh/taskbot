@@ -1,6 +1,5 @@
 // File: lib/phone_mockup/custom_clear_data_dialog.dart
 import 'package:flutter/material.dart';
-import 'clickable_outline.dart'; // Import ClickableOutline
 
 class CustomClearDataDialog extends StatelessWidget {
   final String title;
@@ -10,11 +9,7 @@ class CustomClearDataDialog extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
 
-  // Add GlobalKeys for ClickableOutline
-  final GlobalKey<ClickableOutlineState> cancelOutlineKey = GlobalKey<ClickableOutlineState>();
-  final GlobalKey<ClickableOutlineState> confirmOutlineKey = GlobalKey<ClickableOutlineState>();
-
-  CustomClearDataDialog({ // Modified constructor to remove const
+  const CustomClearDataDialog({
     super.key,
     required this.title,
     required this.content,
@@ -42,26 +37,18 @@ class CustomClearDataDialog extends StatelessWidget {
         textAlign: TextAlign.center,
       ),
       actions: [
-        ClickableOutline(
-          key: cancelOutlineKey,
-          onTap: onCancel,
-          child: TextButton(
-            onPressed: onCancel, // onPressed is still needed for TextButton's own behavior
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.blue),
-            ),
+        TextButton(
+          onPressed: onCancel,
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: Colors.blue),
           ),
         ),
-        ClickableOutline(
-          key: confirmOutlineKey,
-          onTap: onConfirm,
-          child: TextButton(
-            onPressed: onConfirm, // onPressed is still needed for TextButton's own behavior
-            child: Text(
-              confirmButtonText,
-              style: TextStyle(color: confirmButtonColor),
-            ),
+        TextButton(
+          onPressed: onConfirm,
+          child: Text(
+            confirmButtonText,
+            style: TextStyle(color: confirmButtonColor),
           ),
         ),
       ],

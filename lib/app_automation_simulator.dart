@@ -1,7 +1,7 @@
 // File: app_automation_simulator.dart
 import 'package:flutter/material.dart';
-import 'package:taskbot/phone_mockup/phone_mockup_container.dart';
-import 'package:taskbot/phone_mockup/app_grid.dart';
+import 'phone_mockup/phone_mockup_container.dart';
+import 'phone_mockup/app_grid.dart';
 
 class AppAutomationSimulator {
   final GlobalKey<PhoneMockupContainerState> phoneMockupKey;

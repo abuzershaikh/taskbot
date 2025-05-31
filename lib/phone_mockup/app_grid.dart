@@ -29,23 +29,16 @@ class AppGridState extends State<AppGrid> {
   void initState() {
     super.initState();
     _apps = _generateRandomAppSizes(_initialApps);
-    // Ensure keys are created for all apps defined in _initialApps
-    // and stored in the widget.appItemKeys map that is passed in.
-    // This map is owned by PhoneMockupContainerState.
-    for (var appData in _initialApps) {
-      final appName = appData['name']!;
-      final prefixedKeyName = "appgrid_$appName";
-      if (!widget.appItemKeys.containsKey(prefixedKeyName)) {
-        widget.appItemKeys[prefixedKeyName] = GlobalKey<ClickableOutlineState>(debugLabel: prefixedKeyName);
+    // Initialize keys for existing apps in the passed map
+    for (var app in _apps) {
+      if (!widget.appItemKeys.containsKey(app['name'])) {
+        widget.appItemKeys[app['name']!] = GlobalKey<ClickableOutlineState>();
       }
     }
   }
 
   // Method to get app details by name, callable from outside via appGridKey
   Map<String, String>? getAppByName(String appName) {
-    // Note: This method might need adjustment if appName is expected without prefix elsewhere.
-    // For now, it's used by PhoneMockupContainer to get details before navigating to AppInfo,
-    // and AppInfo receives the original appName.
     return _apps.firstWhere(
       (app) => app['name'] == appName,
       orElse: () => {}, // Return empty map if not found
@@ -153,18 +146,16 @@ class AppGridState extends State<AppGrid> {
         itemCount: _apps.length,
         itemBuilder: (context, index) {
           final app = _apps[index];
-          // Retrieve the key from the widget.appItemKeys map using the prefixed name.
-          final appName = app['name']!;
-          final prefixedKeyName = "appgrid_$appName";
-          final appKey = widget.appItemKeys[prefixedKeyName];
-
-          // Assert that the key is not null, as it should have been initialized.
-          assert(appKey != null, "Key for $prefixedKeyName should not be null.");
+          // Ensure a key exists for this app in the passed map
+          if (!widget.appItemKeys.containsKey(app['name'])) {
+             widget.appItemKeys[app['name']!] = GlobalKey<ClickableOutlineState>(debugLabel: 'App: ${app['name']}');
+          }
+          final appKey = widget.appItemKeys[app['name']!]!;
 
           return ClickableOutline(
-            key: appKey!, // Assign the GlobalKey here.
+            key: appKey, // Assign the GlobalKey here
             onTap: () {
-              widget.onAppSelected(appName); // Use original appName for selection event
+              widget.onAppSelected(app['name']!);
             },
             onLongPress: () {
               widget.onAppLongPress(app);
