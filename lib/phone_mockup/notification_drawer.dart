@@ -171,7 +171,7 @@ class NotificationDrawerState extends State<NotificationDrawer> {
                               IconButton(
                                 icon: const Icon(Icons.settings, size: 20, color: Colors.black54),
                                 onPressed: () {
-                                  print("Settings icon tapped in drawer");
+                                  // print("Settings icon tapped in drawer");
                                 },
                               ),
                             ],
@@ -220,7 +220,7 @@ class NotificationDrawerState extends State<NotificationDrawer> {
                                   min: 0,
                                   max: 1,
                                   onChanged: (value) {
-                                    print("Brightness: $value");
+                                    // print("Brightness: $value");
                                   },
                                   activeColor: Colors.blue,
                                   inactiveColor: Colors.grey[300],
@@ -247,7 +247,7 @@ class NotificationDrawerState extends State<NotificationDrawer> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  print("Dismiss silent notifications");
+                                  // print("Dismiss silent notifications");
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
@@ -321,7 +321,7 @@ class NotificationDrawerState extends State<NotificationDrawer> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          print("$title tapped!");
+          // print("$title tapped!");
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -370,7 +370,7 @@ class NotificationDrawerState extends State<NotificationDrawer> {
   Widget _buildQuickSettingIcon(IconData icon, String tooltip, {bool isActive = false}) {
     return GestureDetector(
       onTap: () {
-        print("$tooltip icon tapped!");
+        // print("$tooltip icon tapped!");
       },
       child: Container(
         width: 50,

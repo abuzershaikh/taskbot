@@ -58,7 +58,7 @@ class _MyAppState extends State<MyApp> {
   void _toggleToolDrawer() {
     setState(() {
       _isToolDrawerOpen = !_isToolDrawerOpen;
-      print('main.dart: Tool Drawer toggled. Open: $_isToolDrawerOpen');
+      // print('main.dart: Tool Drawer toggled. Open: $_isToolDrawerOpen');
     });
   }
 
@@ -66,7 +66,7 @@ class _MyAppState extends State<MyApp> {
     if (_isToolDrawerOpen) {
       setState(() {
         _isToolDrawerOpen = false;
-        print('main.dart: Tool Drawer closed via callback.');
+        // print('main.dart: Tool Drawer closed via callback.');
       });
     }
   }
@@ -76,9 +76,9 @@ class _MyAppState extends State<MyApp> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     const double imageBaseSize = 100.0;
-    print(
-      'main.dart: build method called. Screen size: $screenWidth x $screenHeight',
-    );
+    // print(
+    //   'main.dart: build method called. Screen size: $screenWidth x $screenHeight',
+    // );
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

@@ -37,6 +37,7 @@ class PhoneMockupContainer extends StatefulWidget {
 class PhoneMockupContainerState extends State<PhoneMockupContainer> {
   final GlobalKey<NotificationDrawerState> _drawerKey =
       GlobalKey<NotificationDrawerState>();
+  // Removed: final Map<String, GlobalKey<ClickableOutlineState>> _appItemKeys = {};
 
   CurrentScreenView _currentScreenView = CurrentScreenView.appGrid;
   Map<String, String>? _currentAppDetails; // To store details of the app being interacted with
@@ -68,7 +69,8 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
         _currentAppScreenWidget = AppGrid(
           key: widget.appGridKey, // Use the key passed to PhoneMockupContainer
           onAppSelected: _handleAppTap,
-          onAppLongPress: handleAppLongPress, appItemKeys: {}, // Ensured this line is clean
+          onAppLongPress: handleAppLongPress, // This is for direct user long press
+          // Removed: appItemKeys: _appItemKeys,
         );
         break;
       case CurrentScreenView.settings:
@@ -143,10 +145,28 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
   //   });
   // }
 
-  void _handleCommand(String command) {
+  Future<void> _handleCommand(String command) async { // Made async
     final cmd = command.toLowerCase().trim();
     if (cmd.contains('settings')) {
-      _handleAppTap('Settings'); // This will set _currentScreenView to settings
+      // For settings, direct navigation is fine
+      _handleAppTap('Settings');
+    } else if (cmd.startsWith('long press ')) {
+      final appName = cmd.substring('long press '.length).trim();
+      // Removed: await programmaticAppLongPress(appName);
+      // Perform direct action or log that programmatic outline tap is removed
+      // For now, let's make it call the handler directly without outline:
+      final appDetails = widget.appGridKey.currentState?.getAppByName(appName);
+      if (appDetails != null && appDetails.isNotEmpty) {
+        handleAppLongPress(appDetails);
+      } else {
+        // ignore: avoid_print
+        print('PhoneMockupContainer: App for programmatic long press "$appName" not found.');
+      }
+    } else if (cmd.startsWith('tap ')) {
+      final appName = cmd.substring('tap '.length).trim();
+      // Removed: await programmaticAppTap(appName);
+      // Perform direct action or log that programmatic outline tap is removed
+      _handleAppTap(appName); // Call tap handler directly
     } else if (cmd.contains('back')) {
       // Trigger the onBack of the current screen widget if it has one
       if (_currentScreenView == CurrentScreenView.appInfo && _currentAppDetails != null) {
@@ -194,6 +214,8 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
     }
   }
 
+  // Removed: programmaticAppTap method
+
   void _handleAppTap(String appName) {
     // ignore: avoid_print
     print('PhoneMockupContainer: App tapped: $appName');
@@ -221,17 +243,28 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
     }
   }
 
+  // This is called on direct user long press via AppGrid's callback
   void handleAppLongPress(Map<String, String> app) {
     // ignore: avoid_print
-    print('PhoneMockupContainer: Long press on app: ${app['name']}');
+    print('PhoneMockupContainer: User long press on app: ${app['name']}');
+    // This method is for user-initiated long press.
+    // The ClickableOutline within AppGrid handles showing its own outline.
+    // This method in PhoneMockupContainerState is then called as the "action"
+    // to show the dialog.
     _currentAppDetails = Map<String, String>.from(app);
+    _showCustomAppActionDialog(_currentAppDetails!);
+  }
 
+  // Removed: programmaticAppLongPress method
+
+  // Helper to show the app action dialog, used by both user and programmatic long press.
+  void _showCustomAppActionDialog(Map<String, String> appDetails) {
     setState(() {
-      _isBlurred = true; // Set blur when dialog is active
+      _isBlurred = true;
       _activeDialog = CustomAppActionDialog(
-        app: _currentAppDetails!,
+        app: appDetails,
         onActionSelected: (actionName, appDetailsFromDialog) {
-          dismissDialog(); // Dismiss the dialog using the now public method
+          dismissDialog();
           if (actionName == 'App info') {
             navigateToAppInfo(appDetails: appDetailsFromDialog);
           } else {

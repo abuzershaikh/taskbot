@@ -1,18 +1,18 @@
 // File: lib/phone_mockup/app_grid.dart
 import 'package:flutter/material.dart';
 import 'dart:math'; // Import for Random
-import 'clickable_outline.dart'; // Import the new file
+// Removed: import 'clickable_outline.dart'; 
 
 class AppGrid extends StatefulWidget {
   final ValueChanged<String> onAppSelected;
   final ValueChanged<Map<String, String>> onAppLongPress;
-  final Map<String, GlobalKey<ClickableOutlineState>> appItemKeys; // New parameter
+  // Removed: final Map<String, GlobalKey<ClickableOutlineState>> appItemKeys;
 
   const AppGrid({
     super.key,
     required this.onAppSelected,
     required this.onAppLongPress,
-    required this.appItemKeys, // New parameter
+    // Removed: required this.appItemKeys,
   });
 
   @override
@@ -29,12 +29,7 @@ class AppGridState extends State<AppGrid> {
   void initState() {
     super.initState();
     _apps = _generateRandomAppSizes(_initialApps);
-    // Initialize keys for existing apps in the passed map
-    for (var app in _apps) {
-      if (!widget.appItemKeys.containsKey(app['name'])) {
-        widget.appItemKeys[app['name']!] = GlobalKey<ClickableOutlineState>();
-      }
-    }
+    // Removed: Key initialization logic
   }
 
   // Method to get app details by name, callable from outside via appGridKey
@@ -63,9 +58,9 @@ class AppGridState extends State<AppGrid> {
           'totalSize': '${newTotalSize.toStringAsFixed(1)} MB',
         };
       });
-      print('App data/cache updated for $appName. New sizes: Data=$newDataSize, Cache=$newCacheSize');
+      // print('App data/cache updated for $appName. New sizes: Data=$newDataSize, Cache=$newCacheSize');
     } else {
-      print('App $appName not found to update data size.');
+      // print('App $appName not found to update data size.');
     }
   }
 
@@ -79,7 +74,7 @@ class AppGridState extends State<AppGrid> {
     {'name': 'Calendar', 'icon': 'assets/icons/calendar.png', 'version': '2024.17.0-629237913-release'},
     {'name': 'Clock', 'icon': 'assets/icons/clock.png', 'version': '8.2.0'},
     {'name': 'Camera', 'icon': 'assets/icons/camera.png', 'version': '9.2.100.612808000'},
-    {'name': 'Play Store', 'icon': 'assets/icons/play_store.png', 'version': '40.6.31-21'},
+    {'name': 'Play Store', 'icon': 'assets/icons/playstore.png', 'version': '40.6.31-21'},
     {'name': 'Files', 'icon': 'assets/icons/files.png', 'version': '1.0.623214532'},
     {'name': 'Calculator', 'icon': 'assets/icons/calculator.png', 'version': '8.2 (531942488)'},
     {'name': 'Messages', 'icon': 'assets/icons/messages.png', 'version': '20240424_02_RC00.phone_dynamic'},
@@ -146,21 +141,18 @@ class AppGridState extends State<AppGrid> {
         itemCount: _apps.length,
         itemBuilder: (context, index) {
           final app = _apps[index];
-          // Ensure a key exists for this app in the passed map
-          if (!widget.appItemKeys.containsKey(app['name'])) {
-             widget.appItemKeys[app['name']!] = GlobalKey<ClickableOutlineState>(debugLabel: 'App: ${app['name']}');
-          }
-          final appKey = widget.appItemKeys[app['name']!]!;
+          // Removed: Key ensuring logic and appKey final variable
 
-          return ClickableOutline(
-            key: appKey, // Assign the GlobalKey here
+          // Return GestureDetector directly wrapping the app icon Column
+          return GestureDetector(
             onTap: () {
               widget.onAppSelected(app['name']!);
             },
             onLongPress: () {
               widget.onAppLongPress(app);
             },
-            child: Column(
+            child: Column( // This was previously the child of ClickableOutline
+              mainAxisAlignment: MainAxisAlignment.center, // Optional: for better visual centering
               children: [
                 Image.asset(
                   app['icon']!,

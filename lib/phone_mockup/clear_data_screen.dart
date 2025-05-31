@@ -1,6 +1,6 @@
 // File: lib/phone_mockup/clear_data_screen.dart
 import 'package:flutter/material.dart';
-import 'clickable_outline.dart'; // Import the new file
+// Removed: import 'clickable_outline.dart'; 
 
 class ClearDataScreen extends StatelessWidget {
   final String appName;
@@ -34,13 +34,13 @@ class ClearDataScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('ClearDataScreen: build method called for app: $appName'); // DEBUG
+    // print('ClearDataScreen: build method called for app: $appName'); // DEBUG
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
         elevation: 0,
-        leading: ClickableOutline( // Apply outline to back button
+        leading: GestureDetector( // Replaced ClickableOutline
           onTap: onBack,
           child: const Padding(
             padding: EdgeInsets.all(8.0),
@@ -93,9 +93,9 @@ class ClearDataScreen extends StatelessWidget {
 
             // Clear data/cache buttons
             _buildInfoCard([
-              ClickableOutline( // Apply outline to Clear data
+              GestureDetector( // Replaced ClickableOutline
                 onTap: () {
-                  print('ClearDataScreen: Clear data button tapped. Calling showDialog...'); // DEBUG
+                  // print('ClearDataScreen: Clear data button tapped. Calling showDialog...'); // DEBUG
                   showDialog(
                     AlertDialog(
                       title: const Text('Clear app data?'),
@@ -119,9 +119,9 @@ class ClearDataScreen extends StatelessWidget {
                 child: _buildButtonRow(Icons.delete_outline, 'Clear data', 'Delete all app data'),
               ),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              ClickableOutline( // Apply outline to Clear cache
+              GestureDetector( // Replaced ClickableOutline
                 onTap: () {
-                  print('ClearDataScreen: Clear cache button tapped. Calling showDialog...'); // DEBUG
+                  // print('ClearDataScreen: Clear cache button tapped. Calling showDialog...'); // DEBUG
                   showDialog(
                     AlertDialog(
                       title: const Text('Clear cache?'),

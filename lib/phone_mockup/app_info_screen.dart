@@ -1,7 +1,7 @@
 // File: lib/phone_mockup/app_info_screen.dart
  
 import 'package:flutter/material.dart';
-import 'clickable_outline.dart'; // Import the new file
+// Removed: import 'clickable_outline.dart';
 
 class AppInfoScreen extends StatelessWidget {
   final Map<String, String> app;
@@ -22,18 +22,18 @@ class AppInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('AppInfoScreen: build method called for app: ${app['name']}');
+    // print('AppInfoScreen: build method called for app: ${app['name']}');
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
         elevation: 0,
-        leading: ClickableOutline( // Wrap IconButton with ClickableOutline
+        leading: GestureDetector( // Replaced ClickableOutline
           onTap: () {
-            print('AppInfoScreen: Back button pressed');
+            // print('AppInfoScreen: Back button pressed');
             onBack();
           },
-          child: const Padding( // Wrap icon with padding to give outline some space
+          child: const Padding( 
             padding: EdgeInsets.all(8.0),
             child: Icon(Icons.arrow_back, color: Colors.black),
           ),
@@ -79,7 +79,7 @@ class AppInfoScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _buildInfoCard([
               _buildInfoRow(context, 'Storage & cache', app['totalSize'] ?? '0 B', onTap: () {
-                print('AppInfoScreen: Storage & cache tapped. Navigating to ClearDataScreen.');
+                // print('AppInfoScreen: Storage & cache tapped. Navigating to ClearDataScreen.');
                 onNavigateToClearData(app);
               }),
               const Divider(height: 0, indent: 16, endIndent: 16),
@@ -145,13 +145,17 @@ class AppInfoScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(BuildContext context, String title, String subtitle, {VoidCallback? onTap}) {
-    return ClickableOutline( // Wrap with ClickableOutline
+    return GestureDetector( // Replaced ClickableOutline
       onTap: onTap ?? () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("$title tapped")),
         );
       },
       child: Padding(
+        // Added a transparent background to make the whole area tappable, similar to InkWell
+        // If specific hitTestBehavior is needed, it can be added to GestureDetector.
+        // For simple cases, this often works.
+        // behavior: HitTestBehavior.opaque, // Example if needed
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

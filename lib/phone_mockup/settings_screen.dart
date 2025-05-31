@@ -101,7 +101,7 @@ class SettingsScreen extends StatelessWidget {
                         )
                       : const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                   onTap: () {
-                    print('${item['title']} tapped!');
+                    // print('${item['title']} tapped!');
                   },
                 ),
                 if (item != items.last)

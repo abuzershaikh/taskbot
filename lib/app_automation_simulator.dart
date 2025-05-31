@@ -54,9 +54,11 @@ class AppAutomationSimulator {
       return false;
     }
 
-    // Wait for the CustomAppActionDialog to appear
+    // Wait for the CustomAppActionDialog to appear.
+    // ClickableOutline has been removed. The dialog should appear more quickly.
+    // Wait for the CustomAppActionDialog to appear.
     print("Waiting for app action dialog (long press dialog) to appear.");
-    await Future.delayed(const Duration(seconds: 1)); // Give time for the dialog to build
+    await Future.delayed(const Duration(milliseconds: 700)); // Adjusted for dialog appearance time
 
     // *** IMPORTANT FIX HERE ***
     // Step 3: Simulate selecting "App info" and immediately dismiss the CustomAppActionDialog.
@@ -80,9 +82,15 @@ class AppAutomationSimulator {
 
     // Step 4: Wait on App Info screen
     print("Reviewing App Info screen for 1.5 seconds.");
-    await Future.delayed(const Duration(milliseconds: 1500)); // Reduced delay
+    await Future.delayed(const Duration(milliseconds: 1500));
 
-    // Step 5: Click "Storage & cache" (or similar button to navigate to ClearDataScreen)
+    // Step 5: Click "Storage & cache"
+    // If this navigation is triggered by a ClickableOutline element,
+    // PhoneMockupContainerState.navigateToStorageUsage() should ideally be async
+    // and await the outline. Assuming it's not, and if an outline is involved,
+    // a manual delay might be needed here. For now, we assume either no outline
+    // or PhoneMockupContainerState handles it internally if its method isn't async.
+    // The existing "Reviewing App Info screen" delay effectively serves as a wait *after* navigation.
     if (phoneMockupState.mounted) {
       phoneMockupState.navigateToStorageUsage();
       print("Simulating click on 'Storage & cache'. Navigating to Clear Data screen.");
@@ -90,13 +98,17 @@ class AppAutomationSimulator {
       print("Error: PhoneMockupContainerState is not mounted. Cannot navigate to Storage Usage.");
       return false;
     }
+    // ClickableOutline has been removed. Screen transition should be quicker.
+    // A small delay might be needed for UI to settle after navigation.
+    print("Waiting for screen transition after 'Storage & cache' click.");
+    await Future.delayed(const Duration(milliseconds: 300)); // Adjusted for screen transition
 
     // Step 6: Wait on storage screen
     print("Reviewing storage screen for 1.5 seconds.");
-    await Future.delayed(const Duration(milliseconds: 1500)); // Reduced delay
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     // Step 7: Click Clear Data (which should open CustomClearDataDialog)
-    await Future.delayed(const Duration(milliseconds: 500)); // Short delay before clicking
+    await Future.delayed(const Duration(milliseconds: 300)); // Small delay before click, kept.
     if (phoneMockupState.mounted) {
       phoneMockupState.simulateClearDataClick(); // This shows CustomClearDataDialog
       print("Simulating click on 'Clear Data'.");
@@ -104,16 +116,17 @@ class AppAutomationSimulator {
       print("Error: PhoneMockupContainerState is not mounted. Cannot simulate Clear Data click.");
       return false;
     }
+    // Wait for CustomClearDataDialog to appear. ClickableOutline removed.
+    print("Waiting for clear data dialog to appear.");
+    await Future.delayed(const Duration(milliseconds: 700)); // Adjusted for dialog appearance time
 
     // Step 8: Confirm delete (in CustomClearDataDialog)
-    print("Waiting 1 second for confirmation dialog.");
-    await Future.delayed(const Duration(seconds: 1)); // Give time for clear data dialog
-
     if (phoneMockupState.mounted) {
-      // `simulateConfirmDelete()` in PhoneMockupContainerState already calls _dismissDialog().
       phoneMockupState.simulateConfirmDelete();
       print("Simulating click on 'Delete' in confirmation dialog. Dialog should dismiss.");
-      await Future.delayed(const Duration(milliseconds: 500)); // Wait for dialog to dismiss
+      // Wait for action (delete + dismiss) to complete. ClickableOutline removed.
+      print("Waiting for dialog dismissal and data clear operation.");
+      await Future.delayed(const Duration(milliseconds: 500)); // Adjusted for action and dialog dismissal
     } else {
       print("Error: PhoneMockupContainerState is not mounted. Cannot simulate confirm delete.");
       return false;
