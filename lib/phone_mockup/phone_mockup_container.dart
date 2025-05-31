@@ -9,7 +9,8 @@ import 'notification_drawer.dart';
 import 'custom_app_action_dialog.dart';
 import 'app_info_screen.dart';
 import 'clear_data_screen.dart';
-import 'custom_clear_data_dialog.dart'; // Ensured this import is clean
+import 'custom_clear_data_dialog.dart';
+import 'clickable_outline.dart'; // Added import
 
 // Enum to manage the current view being displayed in the phone mockup
 enum CurrentScreenView { appGrid, settings, appInfo, clearData }
@@ -42,6 +43,8 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
   Map<String, String>? _currentAppDetails; // To store details of the app being interacted with
   Widget _currentAppScreenWidget = const SizedBox(); // Holds the actual widget to display
 
+  final Map<String, GlobalKey<ClickableOutlineState>> _clickableOutlineKeys = {}; // Added this line
+
   bool _isBlurred = false;
   Widget? _activeDialog;
 
@@ -65,11 +68,16 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
   void _updateCurrentScreenWidget() {
     switch (_currentScreenView) {
       case CurrentScreenView.appGrid:
+        // AppGrid will now populate the _clickableOutlineKeys map
+        // as it is passed to its appItemKeys parameter.
         _currentAppScreenWidget = AppGrid(
-          key: widget.appGridKey, // Use the key passed to PhoneMockupContainer
+          key: widget.appGridKey,
           onAppSelected: _handleAppTap,
-          onAppLongPress: handleAppLongPress, appItemKeys: {}, // Ensured this line is clean
+          onAppLongPress: handleAppLongPress,
+          appItemKeys: _clickableOutlineKeys, // Pass the map here
         );
+        // No postFrameCallback needed here if AppGrid directly populates the map.
+        // The keys will be available in _clickableOutlineKeys after AppGrid's initState.
         break;
       case CurrentScreenView.settings:
         _currentAppScreenWidget = SettingsScreen(
@@ -143,10 +151,32 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
   //   });
   // }
 
+  Future<void> _handleCommandWithOutline(String command, String targetWidgetName, VoidCallback action) async {
+    final key = _clickableOutlineKeys[targetWidgetName];
+    if (key != null && key.currentState != null) {
+      // Ensure the widget is currently mounted before calling its state methods
+      if (key.currentContext != null && key.currentContext!.mounted) {
+        await key.currentState!.triggerOutlineAndAction(action);
+      } else {
+        // ignore: avoid_print
+        print('Warning: ClickableOutline widget for $targetWidgetName is not mounted or key.currentContext is null. Executing action directly.');
+        action();
+      }
+    } else {
+      // ignore: avoid_print
+      print('Warning: ClickableOutline key not found for $targetWidgetName or currentState is null. Executing action directly.');
+      action();
+    }
+  }
+
   void _handleCommand(String command) {
     final cmd = command.toLowerCase().trim();
-    if (cmd.contains('settings')) {
-      _handleAppTap('Settings'); // This will set _currentScreenView to settings
+    if (cmd.startsWith('open ') || cmd.startsWith('tap ')) {
+      // Assuming commands like "open settings" or "tap photos"
+      final appName = cmd.split(' ').sublist(1).join(' ');
+      // Capitalize the first letter of appName for consistency with how apps are named
+      final capitalizedAppName = appName.isNotEmpty ? appName[0].toUpperCase() + appName.substring(1) : appName;
+      _handleCommandWithOutline(command, capitalizedAppName, () => _handleAppTap(capitalizedAppName));
     } else if (cmd.contains('back')) {
       // Trigger the onBack of the current screen widget if it has one
       if (_currentScreenView == CurrentScreenView.appInfo && _currentAppDetails != null) {
@@ -186,7 +216,10 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
         }
       }
     } else {
-      if (mounted) {
+      // For commands not handled by specific outline logic or general commands
+      if (cmd.contains('settings')) { // Keep direct handling for "settings" if not prefixed by "open" or "tap"
+        _handleAppTap('Settings');
+      } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Unknown command: $command')),
         );
@@ -221,9 +254,9 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
     }
   }
 
-  void handleAppLongPress(Map<String, String> app) {
+  void _showAppActionDialog(Map<String, String> app) {
     // ignore: avoid_print
-    print('PhoneMockupContainer: Long press on app: ${app['name']}');
+    print('PhoneMockupContainer: Showing app action dialog for ${app['name']}');
     _currentAppDetails = Map<String, String>.from(app);
 
     setState(() {
@@ -244,6 +277,29 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
         },
       );
     });
+  }
+
+  Future<void> handleAppLongPress(Map<String, String> app) async {
+    final appName = app['name'];
+    if (appName == null) {
+      // ignore: avoid_print
+      print('Warning: App name is null in handleAppLongPress. Cannot show dialog.');
+      return;
+    }
+
+    // ignore: avoid_print
+    print('PhoneMockupContainer: Long press on app: $appName');
+
+    final key = _clickableOutlineKeys[appName];
+    if (key != null && key.currentState != null && key.currentContext != null && key.currentContext!.mounted) {
+      await key.currentState!.triggerOutlineAndAction(() {
+        _showAppActionDialog(app);
+      });
+    } else {
+      // ignore: avoid_print
+      print('Warning: ClickableOutline key not found or not mounted for $appName. Showing dialog directly.');
+      _showAppActionDialog(app);
+    }
   }
 
   void navigateToAppInfo({Map<String, String>? appDetails}) {

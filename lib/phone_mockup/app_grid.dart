@@ -29,10 +29,13 @@ class AppGridState extends State<AppGrid> {
   void initState() {
     super.initState();
     _apps = _generateRandomAppSizes(_initialApps);
-    // Initialize keys for existing apps in the passed map
-    for (var app in _apps) {
-      if (!widget.appItemKeys.containsKey(app['name'])) {
-        widget.appItemKeys[app['name']!] = GlobalKey<ClickableOutlineState>();
+    // Ensure keys are created for all apps defined in _initialApps
+    // and stored in the widget.appItemKeys map that is passed in.
+    // This map is owned by PhoneMockupContainerState.
+    for (var appData in _initialApps) {
+      final appName = appData['name']!;
+      if (!widget.appItemKeys.containsKey(appName)) {
+        widget.appItemKeys[appName] = GlobalKey<ClickableOutlineState>(debugLabel: appName);
       }
     }
   }
@@ -146,14 +149,16 @@ class AppGridState extends State<AppGrid> {
         itemCount: _apps.length,
         itemBuilder: (context, index) {
           final app = _apps[index];
-          // Ensure a key exists for this app in the passed map
-          if (!widget.appItemKeys.containsKey(app['name'])) {
-             widget.appItemKeys[app['name']!] = GlobalKey<ClickableOutlineState>(debugLabel: 'App: ${app['name']}');
-          }
-          final appKey = widget.appItemKeys[app['name']!]!;
+          // Retrieve the key from the widget.appItemKeys map.
+          // It should have been populated in initState by PhoneMockupContainerState
+          // or by the AppGrid's initState itself ensuring all _initialApps have keys.
+          final appKey = widget.appItemKeys[app['name']!];
+
+          // Assert that the key is not null, as it should have been initialized.
+          assert(appKey != null, "Key for ${app['name']} should not be null.");
 
           return ClickableOutline(
-            key: appKey, // Assign the GlobalKey here
+            key: appKey!, // Assign the GlobalKey here.
             onTap: () {
               widget.onAppSelected(app['name']!);
             },
