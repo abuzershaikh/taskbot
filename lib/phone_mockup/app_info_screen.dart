@@ -1,15 +1,26 @@
 // File: lib/phone_mockup/app_info_screen.dart
  
 import 'package:flutter/material.dart';
-// Removed: import 'clickable_outline.dart';
+import 'clickable_outline.dart';
 
+// Changed back to StatelessWidget
 class AppInfoScreen extends StatelessWidget {
   final Map<String, String> app;
   final VoidCallback onBack;
-  // This callback is specifically for navigating to the ClearDataScreen
   final void Function(Map<String, String> app) onNavigateToClearData;
   final void Function(Widget dialog) showDialog;
   final void Function() dismissDialog;
+
+  // Keys passed from PhoneMockupContainerState
+  final GlobalKey<ClickableOutlineState> backButtonKey;
+  final GlobalKey<ClickableOutlineState> openButtonKey;
+  final GlobalKey<ClickableOutlineState> storageCacheButtonKey;
+  final GlobalKey<ClickableOutlineState> mobileDataKey;
+  final GlobalKey<ClickableOutlineState> batteryKey;
+  final GlobalKey<ClickableOutlineState> notificationsKey;
+  final GlobalKey<ClickableOutlineState> permissionsKey;
+  final GlobalKey<ClickableOutlineState> openByDefaultKey;
+  final GlobalKey<ClickableOutlineState> uninstallButtonKey;
 
   const AppInfoScreen({
     super.key,
@@ -18,6 +29,15 @@ class AppInfoScreen extends StatelessWidget {
     required this.onNavigateToClearData,
     required this.showDialog,
     required this.dismissDialog,
+    required this.backButtonKey,
+    required this.openButtonKey,
+    required this.storageCacheButtonKey,
+    required this.mobileDataKey,
+    required this.batteryKey,
+    required this.notificationsKey,
+    required this.permissionsKey,
+    required this.openByDefaultKey,
+    required this.uninstallButtonKey,
   });
 
   @override
@@ -28,12 +48,13 @@ class AppInfoScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
         elevation: 0,
-        leading: GestureDetector( // Replaced ClickableOutline
-          onTap: () {
+        leading: ClickableOutline(
+          key: backButtonKey, // Use passed-in key
+          action: () async {
             // print('AppInfoScreen: Back button pressed');
             onBack();
           },
-          child: const Padding( 
+          child: const Padding(
             padding: EdgeInsets.all(8.0),
             child: Icon(Icons.arrow_back, color: Colors.black),
           ),
@@ -69,8 +90,7 @@ class AppInfoScreen extends StatelessWidget {
               ],
             ),
             _buildInfoCard([
-              _buildInfoRow(context, 'Open', '', onTap: () {
-                // You might want to define what 'Open' does
+              _buildInfoRow(context, openButtonKey, 'Open', '', action: () async {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Opening ${app['name']}")),
                 );
@@ -78,25 +98,23 @@ class AppInfoScreen extends StatelessWidget {
             ]),
             const SizedBox(height: 20),
             _buildInfoCard([
-              _buildInfoRow(context, 'Storage & cache', app['totalSize'] ?? '0 B', onTap: () {
-                // print('AppInfoScreen: Storage & cache tapped. Navigating to ClearDataScreen.');
+              _buildInfoRow(context, storageCacheButtonKey, 'Storage & cache', app['totalSize'] ?? '0 B', action: () async {
                 onNavigateToClearData(app);
               }),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              _buildInfoRow(context, 'Mobile data & Wi-Fi', '', onTap: () {}),
+              _buildInfoRow(context, mobileDataKey, 'Mobile data & Wi-Fi', '', action: () async {}),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              _buildInfoRow(context, 'Battery', '', onTap: () {}),
+              _buildInfoRow(context, batteryKey, 'Battery', '', action: () async {}),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              _buildInfoRow(context, 'Notifications', '', onTap: () {}),
+              _buildInfoRow(context, notificationsKey, 'Notifications', '', action: () async {}),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              _buildInfoRow(context, 'Permissions', '', onTap: () {}),
+              _buildInfoRow(context, permissionsKey, 'Permissions', '', action: () async {}),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              _buildInfoRow(context, 'Open by default', '', onTap: () {}),
+              _buildInfoRow(context, openByDefaultKey, 'Open by default', '', action: () async {}),
             ]),
             const SizedBox(height: 20),
             _buildInfoCard([
-              _buildInfoRow(context, 'Uninstall', '', onTap: () {
-                // Placeholder for uninstall dialog
+              _buildInfoRow(context, uninstallButtonKey, 'Uninstall', '', action: () async {
                 showDialog(
                   AlertDialog(
                     title: const Text('Uninstall App?'),
@@ -130,6 +148,7 @@ class AppInfoScreen extends StatelessWidget {
     );
   }
 
+  // Helper methods are now part of the StatelessWidget
   Widget _buildInfoCard(List<Widget> children) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -144,18 +163,11 @@ class AppInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String title, String subtitle, {VoidCallback? onTap}) {
-    return GestureDetector( // Replaced ClickableOutline
-      onTap: onTap ?? () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("$title tapped")),
-        );
-      },
+  Widget _buildInfoRow(BuildContext context, GlobalKey<ClickableOutlineState> key, String title, String subtitle, {required Future<void> Function() action}) {
+    return ClickableOutline(
+      key: key, // Use passed-in key from method parameters
+      action: action,
       child: Padding(
-        // Added a transparent background to make the whole area tappable, similar to InkWell
-        // If specific hitTestBehavior is needed, it can be added to GestureDetector.
-        // For simple cases, this often works.
-        // behavior: HitTestBehavior.opaque, // Example if needed
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

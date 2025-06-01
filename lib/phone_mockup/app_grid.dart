@@ -1,18 +1,17 @@
-// File: lib/phone_mockup/app_grid.dart
 import 'package:flutter/material.dart';
 import 'dart:math'; // Import for Random
-// Removed: import 'clickable_outline.dart'; 
+import 'clickable_outline.dart'; // Import the new widget
+import 'phone_mockup_container.dart'; // Required for actions
 
 class AppGrid extends StatefulWidget {
-  final ValueChanged<String> onAppSelected;
-  final ValueChanged<Map<String, String>> onAppLongPress;
-  // Removed: final Map<String, GlobalKey<ClickableOutlineState>> appItemKeys;
-
+  final GlobalKey<PhoneMockupContainerState> phoneMockupKey;
+  // widget.key will be AppGrid's own key, passed as widget.appGridKey from PhoneMockupContainer
+  // So, it's fine to use super.key here if AppGrid itself needs a key from its parent.
+  // However, the key for AppGridState is what's important for PhoneMockupContainer to access AppGridState.
+  // Let's assume super.key is the key for AppGrid widget itself.
   const AppGrid({
-    super.key,
-    required this.onAppSelected,
-    required this.onAppLongPress,
-    // Removed: required this.appItemKeys,
+    super.key, 
+    required this.phoneMockupKey,
   });
 
   @override
@@ -22,25 +21,33 @@ class AppGrid extends StatefulWidget {
 class AppGridState extends State<AppGrid> {
   final ScrollController _scrollController = ScrollController();
   final Random _random = Random();
-
   List<Map<String, String>> _apps = [];
+  Map<String, GlobalKey<ClickableOutlineState>> appItemKeys = {};
 
   @override
   void initState() {
     super.initState();
     _apps = _generateRandomAppSizes(_initialApps);
-    // Removed: Key initialization logic
+    for (var app in _apps) {
+      final appName = app['name'];
+      if (appName != null) {
+        appItemKeys[appName] = GlobalKey<ClickableOutlineState>();
+      }
+    }
   }
 
-  // Method to get app details by name, callable from outside via appGridKey
   Map<String, String>? getAppByName(String appName) {
-    return _apps.firstWhere(
-      (app) => app['name'] == appName,
-      orElse: () => {}, // Return empty map if not found
-    );
+    try {
+      return _apps.firstWhere((app) => app['name'] == appName);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  GlobalKey<ClickableOutlineState>? getKeyForApp(String appName) {
+    return appItemKeys[appName];
   }
 
-  // Method to update app data size, callable from PhoneMockupContainerState
   Future<void> updateAppDataSize(String appName, String newDataSize, String newCacheSize) async {
     final index = _apps.indexWhere((app) => app['name'] == appName);
     if (index != -1) {
@@ -58,12 +65,10 @@ class AppGridState extends State<AppGrid> {
           'totalSize': '${newTotalSize.toStringAsFixed(1)} MB',
         };
       });
-      // print('App data/cache updated for $appName. New sizes: Data=$newDataSize, Cache=$newCacheSize');
-    } else {
-      // print('App $appName not found to update data size.');
     }
   }
 
+  // (Keep _initialApps and _generateRandomAppSizes as they are)
   static const List<Map<String, String>> _initialApps = [
     {'name': 'Chrome', 'icon': 'assets/icons/chrome.png', 'version': '124.0.0.0'},
     {'name': 'Gmail', 'icon': 'assets/icons/gmail.png', 'version': '2024.04.28.623192461'},
@@ -114,9 +119,8 @@ class AppGridState extends State<AppGrid> {
   void scrollToApp(String appName) {
     final index = _apps.indexWhere((app) => app['name'] == appName);
     if (index != -1) {
-      const double itemHeight = 50 + 8 + 12 + 16;
-      final double offset = (index ~/ 3) * itemHeight;
-
+      const double itemHeight = 100; // Adjusted for typical item height
+      final double offset = (index ~/ 3) * itemHeight; 
       _scrollController.animateTo(
         offset,
         duration: const Duration(milliseconds: 500),
@@ -141,34 +145,56 @@ class AppGridState extends State<AppGrid> {
         itemCount: _apps.length,
         itemBuilder: (context, index) {
           final app = _apps[index];
-          // Removed: Key ensuring logic and appKey final variable
+          final appName = app['name']!;
+          // Ensure key exists, though initState should guarantee it.
+          final GlobalKey<ClickableOutlineState> itemKey = appItemKeys[appName] ?? (appItemKeys[appName] = GlobalKey<ClickableOutlineState>());
 
-          // Return GestureDetector directly wrapping the app icon Column
-          return GestureDetector(
-            onTap: () {
-              widget.onAppSelected(app['name']!);
-            },
-            onLongPress: () {
-              widget.onAppLongPress(app);
-            },
-            child: Column( // This was previously the child of ClickableOutline
-              mainAxisAlignment: MainAxisAlignment.center, // Optional: for better visual centering
-              children: [
-                Image.asset(
-                  app['icon']!,
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  app['name']!,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: Colors.black),
-                ),
-              ],
+
+          Future<void> appAction() async {
+            // This is the action that will be triggered by the ClickableOutline
+            // For app icons, this is typically a long press action.
+            widget.phoneMockupKey.currentState?.handleAppLongPress(app);
+          }
+
+          return ClickableOutline(
+            key: itemKey,
+            action: appAction,
+            child: GestureDetector(
+              onTap: () {
+                // Manual tap: For now, let's make it also trigger the long press action
+                // or a specific tap action if defined on PhoneMockupContainerState.
+                // To avoid confusion, perhaps manual taps should be disabled or have a distinct visual feedback
+                // if they are not supposed to be part of the automated flow.
+                // For this simulation, a manual tap could just show a message.
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Manual tap on $appName. Automation uses defined action (long press).")),
+                );
+                // Optionally, to make manual tap behave like the automated one:
+                // widget.phoneMockupKey.currentState?.handleAppLongPress(app);
+              },
+              onLongPress: () {
+                // Manual long press should behave like the automated action.
+                widget.phoneMockupKey.currentState?.handleAppLongPress(app);
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    app['icon']!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    appName,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                  ),
+                ],
+              ),
             ),
           );
         },

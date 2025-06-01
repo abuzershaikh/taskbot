@@ -1,5 +1,6 @@
 // File: lib/phone_mockup/custom_clear_data_dialog.dart
 import 'package:flutter/material.dart';
+import 'clickable_outline.dart'; // Added import
 
 class CustomClearDataDialog extends StatelessWidget {
   final String title;
@@ -9,6 +10,10 @@ class CustomClearDataDialog extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
 
+  // Keys for ClickableOutline
+  final GlobalKey<ClickableOutlineState> cancelKey;
+  final GlobalKey<ClickableOutlineState> confirmKey;
+
   const CustomClearDataDialog({
     super.key,
     required this.title,
@@ -17,11 +22,13 @@ class CustomClearDataDialog extends StatelessWidget {
     this.confirmButtonColor = Colors.red, // Default to red for delete/clear
     required this.onConfirm,
     required this.onCancel,
+    required this.cancelKey,
+    required this.confirmKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog( // Use AlertDialog for a standard dialog appearance
+    return AlertDialog(
       title: Text(
         title,
         style: const TextStyle(
@@ -37,24 +44,32 @@ class CustomClearDataDialog extends StatelessWidget {
         textAlign: TextAlign.center,
       ),
       actions: [
-        TextButton(
-          onPressed: onCancel,
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.blue),
+        ClickableOutline(
+          key: cancelKey,
+          action: () async => onCancel(),
+          child: TextButton(
+            onPressed: onCancel, // Keep direct tap for normal user interaction
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.blue),
+            ),
           ),
         ),
-        TextButton(
-          onPressed: onConfirm,
-          child: Text(
-            confirmButtonText,
-            style: TextStyle(color: confirmButtonColor),
+        ClickableOutline(
+          key: confirmKey,
+          action: () async => onConfirm(),
+          child: TextButton(
+            onPressed: onConfirm, // Keep direct tap for normal user interaction
+            child: Text(
+              confirmButtonText,
+              style: TextStyle(color: confirmButtonColor),
+            ),
           ),
         ),
       ],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), // Apply border radius to the dialog itself
-      contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0), // Adjust padding for content
-      actionsPadding: const EdgeInsets.all(8.0), // Adjust padding for actions
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
+      actionsPadding: const EdgeInsets.all(8.0),
     );
   }
 }

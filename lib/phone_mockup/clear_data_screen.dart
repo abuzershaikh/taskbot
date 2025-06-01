@@ -1,7 +1,9 @@
 // File: lib/phone_mockup/clear_data_screen.dart
 import 'package:flutter/material.dart';
-// Removed: import 'clickable_outline.dart'; 
+import 'package:taskbot/phone_mockup/custom_clear_data_dialog.dart';
+import 'clickable_outline.dart';
 
+// Changed back to StatelessWidget
 class ClearDataScreen extends StatelessWidget {
   final String appName;
   final String appVersion;
@@ -13,8 +15,17 @@ class ClearDataScreen extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onPerformClearData;
   final VoidCallback onPerformClearCache;
-  final void Function(Widget dialog) showDialog; // From PhoneMockupContainer
-  final void Function() dismissDialog; // From PhoneMockupContainer
+  final void Function(Widget dialog) showDialog;
+  final void Function() dismissDialog;
+
+  // Keys passed from PhoneMockupContainerState
+  final GlobalKey<ClickableOutlineState> backButtonKey;
+  final GlobalKey<ClickableOutlineState> clearDataButtonKey;
+  final GlobalKey<ClickableOutlineState> clearCacheButtonKey;
+
+  // Keys for the CustomClearDataDialog's buttons
+  final GlobalKey<ClickableOutlineState> dialogCancelKey;
+  final GlobalKey<ClickableOutlineState> dialogConfirmKey;
 
   const ClearDataScreen({
     super.key,
@@ -30,18 +41,24 @@ class ClearDataScreen extends StatelessWidget {
     required this.onPerformClearCache,
     required this.showDialog,
     required this.dismissDialog,
+    required this.backButtonKey,
+    required this.clearDataButtonKey,
+    required this.clearCacheButtonKey,
+    required this.dialogCancelKey, // Pass dialog keys
+    required this.dialogConfirmKey, // Pass dialog keys
   });
 
   @override
   Widget build(BuildContext context) {
-    // print('ClearDataScreen: build method called for app: $appName'); // DEBUG
+    // print('ClearDataScreen: build method called for app: $appName');
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
         elevation: 0,
-        leading: GestureDetector( // Replaced ClickableOutline
-          onTap: onBack,
+        leading: ClickableOutline(
+          key: backButtonKey, 
+          action: () async => onBack(),
           child: const Padding(
             padding: EdgeInsets.all(8.0),
             child: Icon(Icons.arrow_back, color: Colors.black),
@@ -57,7 +74,6 @@ class ClearDataScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // App icon and name
             Column(
               children: [
                 Image.asset(
@@ -78,8 +94,6 @@ class ClearDataScreen extends StatelessWidget {
                 const SizedBox(height: 20),
               ],
             ),
-
-            // Storage details card
             _buildInfoCard([
               _buildInfoRow('Total', initialTotalSize),
               const Divider(height: 0, indent: 16, endIndent: 16),
@@ -90,55 +104,59 @@ class ClearDataScreen extends StatelessWidget {
               _buildInfoRow('Cache', initialCacheSize),
             ]),
             const SizedBox(height: 20),
-
-            // Clear data/cache buttons
             _buildInfoCard([
-              GestureDetector( // Replaced ClickableOutline
-                onTap: () {
-                  // print('ClearDataScreen: Clear data button tapped. Calling showDialog...'); // DEBUG
+              ClickableOutline(
+                key: clearDataButtonKey, 
+                action: () async {
                   showDialog(
-                    AlertDialog(
-                      title: const Text('Clear app data?'),
-                      content: const Text('This app\'s data, including files and settings, will be permanently deleted from this device.'),
-                      actions: [
-                        TextButton(
-                          onPressed: dismissDialog,
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            dismissDialog();
-                            onPerformClearData();
-                          },
-                          child: const Text('Delete'),
-                        ),
-                      ],
+                    // Use CustomClearDataDialog instead of AlertDialog
+                    CustomClearDataDialog(
+                      title: 'Clear app data?',
+                      content: 'This app\'s data, including files and settings, will be permanently deleted from this device.',
+                      confirmButtonText: 'Delete',
+                      onConfirm: () {
+                        // dismissDialog is called by CustomClearDataDialog's internal logic if using its buttons
+                        // For programmatic outline call, onConfirm itself should handle dismissal if needed
+                        // However, the original onConfirm for the dialog's button already calls dismissDialog.
+                        // So, this onConfirm (passed to CustomClearDataDialog) will be called, which calls dismissDialog.
+                        dismissDialog(); // Ensure dialog is dismissed
+                        onPerformClearData();
+                      },
+                      onCancel: dismissDialog,
+                      cancelKey: dialogCancelKey, // Pass the key
+                      confirmKey: dialogConfirmKey, // Pass the key
                     ),
                   );
                 },
                 child: _buildButtonRow(Icons.delete_outline, 'Clear data', 'Delete all app data'),
               ),
               const Divider(height: 0, indent: 16, endIndent: 16),
-              GestureDetector( // Replaced ClickableOutline
-                onTap: () {
-                  // print('ClearDataScreen: Clear cache button tapped. Calling showDialog...'); // DEBUG
+              ClickableOutline(
+                key: clearCacheButtonKey, 
+                action: () async {
                   showDialog(
-                    AlertDialog(
-                      title: const Text('Clear cache?'),
-                      content: const Text('This will clear the cached data for the app.'),
-                      actions: [
-                        TextButton(
-                          onPressed: dismissDialog,
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            dismissDialog();
-                            onPerformClearCache();
-                          },
-                          child: const Text('Clear Cache'),
-                        ),
-                      ],
+                    // Using CustomClearDataDialog for consistency, though keys aren't strictly needed for "Clear Cache" yet by AppAutomationSimulator
+                    CustomClearDataDialog(
+                      title: 'Clear cache?',
+                      content: 'This will clear the cached data for the app.',
+                      confirmButtonText: 'Clear Cache',
+                      onConfirm: () {
+                        dismissDialog();
+                        onPerformClearCache();
+                      },
+                      onCancel: dismissDialog,
+                      // These keys are for the dialog's own buttons.
+                      // For this "Clear Cache" path, we might not have specific automation triggers for its dialog buttons yet,
+                      // but passing them for consistency if CustomClearDataDialog expects them.
+                      // If we had specific keys for "Clear Cache Dialog Cancel" and "Clear Cache Dialog Confirm", they'd go here.
+                      // For now, using the same dialog keys as clear data, or dummy keys if they must be unique and are not used.
+                      // Let's assume for now CustomClearDataDialog is flexible or we'd define separate keys if needed.
+                      // For this fix, the crucial part is that CustomClearDataDialog is used for "Clear Data".
+                      // Re-using keys here might lead to issues if both dialogs are somehow on screen (not possible with _activeDialog).
+                      // Best practice: Pass dedicated keys if "Clear Cache" dialog buttons also need independent automation.
+                      // For now, this example will reuse, assuming AppAutomationSimulator doesn't target "Clear Cache" dialog buttons.
+                      cancelKey: dialogCancelKey, // Example: re-using, ideally would be e.g. _clearCacheDialogCancelKey
+                      confirmKey: dialogConfirmKey, // Example: re-using, ideally would be e.g. _clearCacheDialogConfirmKey
                     ),
                   );
                 },
