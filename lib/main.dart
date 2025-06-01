@@ -1,5 +1,8 @@
-// File: main.dart
+ 
+ 
 import 'package:flutter/material.dart';
+ 
+import 'package:flutter_box_transform/flutter_box_transform.dart'; // Import flutter_box_transform
 import 'phone_mockup/app_grid.dart'; // Import for AppGridState
 import 'phone_mockup/phone_mockup_container.dart';
 import 'dart:io';
@@ -27,6 +30,11 @@ class _MyAppState extends State<MyApp> {
   double _imageScale = 1.0;
   double _lastScale = 1.0;
 
+  // State variables for the frame image
+  @visibleForTesting
+  File? _frameImage;
+  Rect? _frameRect; // Using Rect for flutter_box_transform
+
   bool _isToolDrawerOpen = false;
 
   void _onImageChanged(File? newImage) {
@@ -40,6 +48,23 @@ class _MyAppState extends State<MyApp> {
       }
     });
   }
+
+  // Method to handle frame image changes
+  @visibleForTesting
+  void _onFrameImageChanged(File? newFrameImage) {
+    setState(() {
+      _frameImage = newFrameImage;
+      if (newFrameImage == null) {
+        _frameRect = null; // Clear rect if image is removed
+      } else {
+        // Initial rect will be set in build method when context is available
+        // to correctly center it. For now, just nullify it so build can init.
+        _frameRect = null; 
+      }
+    });
+  }
+
+  // _onFramePan and _onFrameScale are no longer needed as TransformableBox handles this.
 
   void _onImagePan(double dx, double dy) {
     setState(() {
@@ -76,6 +101,8 @@ class _MyAppState extends State<MyApp> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     const double imageBaseSize = 100.0;
+    const double frameBaseSize = 300.0; // Base size for the frame
+    const double kTransparentHandleSize = 24.0; // Default handleTapSize is 24.0
     // print(
     //   'main.dart: build method called. Screen size: $screenWidth x $screenHeight',
     // );
@@ -125,6 +152,59 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
               ),
+            
+            // Display the Frame Image using TransformableBox
+            if (_frameImage != null) ...[
+              Builder( // Use Builder to ensure context for MediaQuery is up-to-date
+                builder: (context) {
+                  if (_frameRect == null) {
+                    // Initialize _frameRect here if it's null (e.g., after image pick)
+                    // This ensures screenWidth and screenHeight are available from a current context.
+                    final currentScreenWidth = MediaQuery.of(context).size.width;
+                    final currentScreenHeight = MediaQuery.of(context).size.height;
+                    _frameRect = Rect.fromLTWH(
+                      currentScreenWidth / 2 - frameBaseSize / 2,
+                      currentScreenHeight / 2 - frameBaseSize / 2,
+                      frameBaseSize,
+                      frameBaseSize,
+                    );
+                  }
+                  // Ensure _frameRect is not null before building TransformableBox
+                  if (_frameRect == null) return const SizedBox.shrink();
+
+                  return TransformableBox(
+                    rect: _frameRect!,
+                    onChanged: (UITransformResult result, DragUpdateDetails? event) { // Corrected signature
+                      setState(() {
+                        _frameRect = result.rect;
+                      });
+                    },
+                    contentBuilder: (BuildContext context, Rect rect, Flip flip) {
+                      return Image.file(
+                        _frameImage!,
+                        fit: BoxFit.fill, // Fill the bounds of the TransformableBox
+                        width: rect.width,
+                        height: rect.height,
+                      );
+                    },
+                    cornerHandleBuilder: (BuildContext context, HandlePosition handle) {
+                      return Container(
+                        width: kTransparentHandleSize,
+                        height: kTransparentHandleSize,
+                        color: Colors.transparent,
+                      );
+                    },
+                    sideHandleBuilder: (BuildContext context, HandlePosition handle) {
+                      return Container(
+                        width: kTransparentHandleSize,
+                        height: kTransparentHandleSize,
+                        color: Colors.transparent,
+                      );
+                    },
+                  );
+                }
+              ),
+            ],
 
             // Tool Drawer Toggle Button
             Positioned(
@@ -148,6 +228,7 @@ class _MyAppState extends State<MyApp> {
               child: ToolDrawer(
                 pickedImage: _pickedImage,
                 onImageChanged: _onImageChanged,
+                onFrameImageChanged: _onFrameImageChanged, // Pass the new callback
                 onImagePan: _onImagePan,
                 onImageScale: _onImageScale,
                 currentImageScale: _imageScale,

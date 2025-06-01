@@ -9,6 +9,7 @@ import 'dart:io';
 class ToolDrawer extends StatefulWidget {
   final File? pickedImage;
   final Function(File?) onImageChanged;
+  final Function(File?) onFrameImageChanged; // New callback for frame image
   final Function(double, double) onImagePan;
   final Function(double) onImageScale;
   final VoidCallback onClose;
@@ -20,6 +21,7 @@ class ToolDrawer extends StatefulWidget {
     super.key,
     required this.pickedImage,
     required this.onImageChanged,
+    required this.onFrameImageChanged, // New callback for frame image
     required this.onImagePan,
     required this.onImageScale,
     required this.onClose,
@@ -86,6 +88,23 @@ class ToolDrawerState extends State<ToolDrawer> {
     widget.onClose(); // Close drawer after action
   }
 
+  // Function to pick a frame image from the gallery
+  Future<void> _pickFrameImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      widget.onFrameImageChanged(File(image.path)); // Notify parent
+      widget.onClose(); // Close drawer after action
+    }
+  }
+
+  // Function to dismiss the frame image
+  void _dismissFrameImage() {
+    widget.onFrameImageChanged(null); // Notify parent
+    widget.onClose(); // Close drawer after action
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -145,6 +164,28 @@ class ToolDrawerState extends State<ToolDrawer> {
                       backgroundColor: Colors.red,
                     ),
                   ),
+                const SizedBox(height: 10), // Spacing before new buttons
+                // New buttons for Frame
+                ElevatedButton.icon(
+                  onPressed: _pickFrameImage,
+                  icon: const Icon(Icons.filter_hdr_outlined), // Or similar
+                  label: const Text('Import Frame'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: _dismissFrameImage,
+                  icon: const Icon(Icons.delete_outline), // Or similar
+                  label: const Text('Remove Frame'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    textStyle: const TextStyle(fontSize: 16),
+                    backgroundColor: Colors.redAccent, // Slightly different red
+                  ),
+                ),
                 const SizedBox(height: 20),
                 const Text(
                   'Image Controls:',
