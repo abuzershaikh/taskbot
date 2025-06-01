@@ -1,5 +1,3 @@
- 
- 
 import 'package:flutter/material.dart';
  
 import 'package:flutter_box_transform/flutter_box_transform.dart'; // Import flutter_box_transform
@@ -24,6 +22,7 @@ class _MyAppState extends State<MyApp> {
   final GlobalKey<PhoneMockupContainerState> _phoneMockupKey = GlobalKey<PhoneMockupContainerState>();
   final GlobalKey<AppGridState> _appGridKey = GlobalKey<AppGridState>(); // Correctly typed key for AppGrid
 
+  File? _backgroundImage;
   File? _pickedImage;
   double _imageX = 0;
   double _imageY = 0;
@@ -96,6 +95,18 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  void _onWallpaperChanged(File? newImage) {
+    setState(() {
+      _backgroundImage = newImage;
+    });
+  }
+
+  void _removeWallpaper() {
+    setState(() {
+      _backgroundImage = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -111,15 +122,25 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Phone Mockup Editor',
       home: Scaffold(
-        backgroundColor: Colors.grey,
-        body: Stack(
-          children: [
-            Align(
-              alignment: Alignment.center,
+        body: Container(
+          decoration: _backgroundImage != null
+              ? BoxDecoration(
+                  image: DecorationImage(
+                    image: FileImage(_backgroundImage!),
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : const BoxDecoration(
+                  color: Colors.grey, // Default background color
+                ),
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.center,
  child: PhoneMockupContainer(key: _phoneMockupKey, appGridKey: _appGridKey,), // Pass the key here
-            ),
+              ),
 
-            if (_pickedImage != null)
+              if (_pickedImage != null)
               Positioned(
                 left:
                     screenWidth / 2 -
@@ -233,11 +254,14 @@ class _MyAppState extends State<MyApp> {
                 onImageScale: _onImageScale,
                 currentImageScale: _imageScale,
                 onClose: _closeToolDrawer,
+                onWallpaperChanged: _onWallpaperChanged,
+                onRemoveWallpaper: _removeWallpaper,
                 phoneMockupKey: _phoneMockupKey, // Pass instance variable _phoneMockupKey
                 appGridKey: _appGridKey,       // Pass instance variable _appGridKey
               ),
             ),
           ],
+        ),
         ),
       ),
     );

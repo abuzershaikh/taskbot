@@ -5,6 +5,7 @@ import 'phone_mockup/app_grid.dart'; // Import for AppGridState
 import 'phone_mockup/phone_mockup_container.dart'; // Import for PhoneMockupContainerState
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'phone_mockup/wallpaper_settings.dart';
 
 class ToolDrawer extends StatefulWidget {
   final File? pickedImage;
@@ -16,6 +17,9 @@ class ToolDrawer extends StatefulWidget {
   final double currentImageScale;
   final GlobalKey<PhoneMockupContainerState> phoneMockupKey; // NEW
   final GlobalKey<AppGridState> appGridKey; // NEW
+  final Function(File?) onWallpaperChanged;
+  final VoidCallback onRemoveWallpaper;
+  final File? currentWallpaper;
 
   const ToolDrawer({
     super.key,
@@ -28,6 +32,9 @@ class ToolDrawer extends StatefulWidget {
     required this.currentImageScale,
     required this.phoneMockupKey, // NEW
     required this.appGridKey, // NEW
+    required this.onWallpaperChanged,
+    required this.onRemoveWallpaper,
+    this.currentWallpaper,
   });
 
   @override
@@ -184,6 +191,33 @@ class ToolDrawerState extends State<ToolDrawer> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     textStyle: const TextStyle(fontSize: 16),
                     backgroundColor: Colors.redAccent, // Slightly different red
+                  ),
+                ),
+                const SizedBox(height: 10), // Add some spacing
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Close the drawer first
+                    widget.onClose();
+                    // Navigate to WallpaperSettingsScreen
+                    // Ensure context is available and mounted before navigating
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WallpaperSettingsScreen(
+                            onWallpaperChanged: widget.onWallpaperChanged,
+                            onRemoveWallpaper: widget.onRemoveWallpaper,
+                            currentWallpaper: widget.currentWallpaper,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.wallpaper),
+                  label: const Text('Change Wallpaper'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    textStyle: const TextStyle(fontSize: 16),
                   ),
                 ),
                 const SizedBox(height: 20),
