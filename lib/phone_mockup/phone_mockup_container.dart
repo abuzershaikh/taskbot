@@ -1,4 +1,3 @@
- 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui'; // For BackdropFilter
@@ -483,9 +482,12 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
         decoration: const BoxDecoration(
           color: Colors.black,
         ),
-        child: Stack(
-          children: [
-            Positioned(
+        child: InkWell(
+          splashColor: Colors.transparent,
+          onTap: () {},
+          child: Stack(
+            children: [
+              Positioned(
               top: 0,
               left: 0,
               right: 0,
@@ -538,6 +540,7 @@ class PhoneMockupContainerState extends State<PhoneMockupContainer> {
               ),
             NotificationDrawer(key: _drawerKey),
           ],
+        ),
         ),
       ),
     );
