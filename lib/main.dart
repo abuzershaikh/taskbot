@@ -5,6 +5,8 @@ import 'phone_mockup/app_grid.dart'; // Import for AppGridState
 import 'phone_mockup/phone_mockup_container.dart';
 import 'dart:io';
 import 'tool_drawer.dart';
+import 'command_service.dart';
+import 'command_controller.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,6 +23,9 @@ class _MyAppState extends State<MyApp> {
   // Initialize GlobalKeys as instance variables
   final GlobalKey<PhoneMockupContainerState> _phoneMockupKey = GlobalKey<PhoneMockupContainerState>();
   final GlobalKey<AppGridState> _appGridKey = GlobalKey<AppGridState>(); // Correctly typed key for AppGrid
+
+  late final CommandService _commandService;
+  late final CommandController _commandController;
 
   File? _backgroundImage;
   File? _pickedImage;
@@ -105,6 +110,21 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _backgroundImage = null;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _commandService = CommandService();
+    _commandController = CommandController(_commandService);
+    _commandService.onNewPythonCommand = _commandController.processCommand;
+    _commandService.startPolling();
+  }
+
+  @override
+  void dispose() {
+    _commandService.stopPolling();
+    super.dispose();
   }
 
   @override
