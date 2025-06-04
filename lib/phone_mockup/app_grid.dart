@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io'; // Import for File
 import 'dart:math'; // Import for Random
 import 'clickable_outline.dart'; // Import the new widget
 import 'phone_mockup_container.dart'; // Required for actions
@@ -34,6 +35,39 @@ class AppGridState extends State<AppGrid> {
         appItemKeys[appName] = GlobalKey<ClickableOutlineState>();
       }
     }
+  }
+
+  void addIcons(List<Map<String, String>> newIcons) {
+    setState(() {
+      for (var iconData in newIcons) {
+        // Ensure 'name' and 'icon' path are present
+        if (iconData['name'] == null || iconData['icon'] == null) {
+          // Handle error or skip this icon
+          print("Skipping icon due to missing name or icon path: $iconData");
+          continue;
+        }
+
+        // Generate random sizes
+        final double appSizeMB = _random.nextDouble() * (200 - 50) + 50; // Example range
+        final double dataSizeMB = _random.nextDouble() * (100 - 10) + 10;
+        final double cacheSizeMB = _random.nextDouble() * (50 - 5) + 5;
+        final double totalSizeMB = appSizeMB + dataSizeMB + cacheSizeMB;
+
+        // Add/update icon data with sizes
+        iconData['appSize'] = '${appSizeMB.toStringAsFixed(1)} MB';
+        iconData['dataSize'] = '${dataSizeMB.toStringAsFixed(1)} MB';
+        iconData['cacheSize'] = '${cacheSizeMB.toStringAsFixed(1)} MB';
+        iconData['totalSize'] = '${totalSizeMB.toStringAsFixed(1)} MB';
+        
+        // Add a placeholder version if not provided
+        if (iconData['version'] == null) {
+          iconData['version'] = '1.0.0'; // Default version
+        }
+
+        _apps.add(iconData);
+        appItemKeys[iconData['name']!] = GlobalKey<ClickableOutlineState>();
+      }
+    });
   }
 
   Map<String, String>? getAppByName(String appName) {
@@ -146,6 +180,35 @@ class AppGridState extends State<AppGrid> {
         itemBuilder: (context, index) {
           final app = _apps[index];
           final appName = app['name']!;
+          final String iconPath = app['icon']!; // Ensure iconPath is not null
+
+          // Determine if the icon is an asset or a file
+          Widget iconWidget;
+          if (iconPath.startsWith('assets/')) {
+            iconWidget = Image.asset(
+              iconPath,
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                print("Error loading asset: $iconPath");
+                return const Icon(Icons.broken_image, size: 50); // Placeholder for broken asset
+              },
+            );
+          } else {
+            iconWidget = Image.file(
+              File(iconPath), // Create a File object
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                // Handle potential errors if the file path is invalid or image is corrupt
+                print("Error loading file: $iconPath - $error");
+                return const Icon(Icons.broken_image, size: 50); // Placeholder for broken file image
+              },
+            );
+          }
+
           // Ensure key exists, though initState should guarantee it.
           final GlobalKey<ClickableOutlineState> itemKey = appItemKeys[appName] ?? (appItemKeys[appName] = GlobalKey<ClickableOutlineState>());
 
@@ -179,12 +242,7 @@ class AppGridState extends State<AppGrid> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    app['icon']!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.contain,
-                  ),
+                  iconWidget, // Use the determined iconWidget
                   const SizedBox(height: 8),
                   Text(
                     appName,

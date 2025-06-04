@@ -5,6 +5,7 @@ import 'phone_mockup/app_grid.dart'; // Import for AppGridState
 import 'phone_mockup/phone_mockup_container.dart'; // Import for PhoneMockupContainerState
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:path/path.dart' as p; // Added for path manipulation
 import 'phone_mockup/wallpaper_settings.dart';
 
 class ToolDrawer extends StatefulWidget {
@@ -93,6 +94,33 @@ class ToolDrawerState extends State<ToolDrawer> {
   void _dismissImage() {
     widget.onImageChanged(null); // Notify parent
     widget.onClose(); // Close drawer after action
+  }
+
+  Future<void> _pickIcons() async {
+    final ImagePicker picker = ImagePicker();
+    // Pick multiple images
+    final List<XFile> pickedFiles = await picker.pickMultipleMedia();
+
+    if (pickedFiles.isNotEmpty) {
+      List<Map<String, String>> newIcons = [];
+      for (var file in pickedFiles) {
+        if (newIcons.length >= 50) {
+          if (mounted) { // Check if the widget is still in the tree
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Processing the first 50 selected icons.")),
+            );
+          }
+          break; // Limit to 50 icons
+        }
+        String iconName = p.basenameWithoutExtension(file.path);
+        newIcons.add({'name': iconName, 'icon': file.path});
+      }
+
+      if (newIcons.isNotEmpty) {
+        widget.appGridKey.currentState?.addIcons(newIcons);
+        widget.onClose(); // Close drawer after action
+      }
+    }
   }
 
   // Function to pick a frame image from the gallery
@@ -220,6 +248,16 @@ class ToolDrawerState extends State<ToolDrawer> {
                     textStyle: const TextStyle(fontSize: 16),
                   ),
                 ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: _pickIcons,
+                icon: const Icon(Icons.upload_file), // Or Icons.add_photo_alternate_multiple_outline
+                label: const Text('Upload Icons'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+              ),
                 const SizedBox(height: 20),
                 const Text(
                   'Image Controls:',

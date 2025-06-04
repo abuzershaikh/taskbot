@@ -1,5 +1,5 @@
 // File: lib/phone_mockup/app_info_screen.dart
- 
+import 'dart:io'; // Added for File class
 import 'package:flutter/material.dart';
 import 'clickable_outline.dart';
 
@@ -71,11 +71,35 @@ class AppInfoScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Column(
               children: [
-                Image.asset(
-                  app['icon']!,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
+                Builder( // Use Builder to ensure context is available for errorBuilder if needed earlier
+                  builder: (context) {
+                    final String iconPath = app['icon']!;
+                    Widget iconWidget;
+                    if (iconPath.startsWith('assets/')) {
+                      iconWidget = Image.asset(
+                        iconPath,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          print("Error loading asset in AppInfoScreen: $iconPath - $error");
+                          return const Icon(Icons.broken_image, size: 80); // Placeholder
+                        },
+                      );
+                    } else {
+                      iconWidget = Image.file(
+                        File(iconPath),
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          print("Error loading file in AppInfoScreen: $iconPath - $error");
+                          return const Icon(Icons.broken_image, size: 80); // Placeholder
+                        },
+                      );
+                    }
+                    return iconWidget;
+                  }
                 ),
                 const SizedBox(height: 10),
                 Text(

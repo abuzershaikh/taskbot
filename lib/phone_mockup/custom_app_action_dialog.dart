@@ -1,5 +1,6 @@
  
  
+import 'dart:io'; // Added for File class
 import 'package:flutter/material.dart';
 import 'clickable_outline.dart'; // Added import
 
@@ -25,6 +26,33 @@ class CustomAppActionDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     const double desiredDialogWidth = 180.0;
 
+    final String iconPath = app['icon']!;
+    Widget iconWidget;
+
+    if (iconPath.startsWith('assets/')) {
+      iconWidget = Image.asset(
+        iconPath,
+        width: 60,
+        height: 60,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print("Error loading asset in CustomAppActionDialog: $iconPath - $error");
+          return const Icon(Icons.broken_image, size: 60); // Placeholder
+        },
+      );
+    } else {
+      iconWidget = Image.file(
+        File(iconPath),
+        width: 60,
+        height: 60,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print("Error loading file in CustomAppActionDialog: $iconPath - $error");
+          return const Icon(Icons.broken_image, size: 60); // Placeholder
+        },
+      );
+    }
+
     return Center(
       child: Material(
         color: Colors.transparent,
@@ -33,12 +61,7 @@ class CustomAppActionDialog extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                app['icon']!,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-              ),
+              child: iconWidget, // Use the dynamic iconWidget here
             ),
             const SizedBox(height: 10),
             Text(
