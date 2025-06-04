@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:csv/csv.dart';
-import 'package:path/path.dart' as path; // For path manipulation
+// For path manipulation
 
 // Define the shared CSV path. This assumes the Flutter app is run from the project root.
 // Adjustments might be needed for bundled apps or different execution contexts.
-final String SHARED_CSV_PATH = path.join(Directory.current.path, 'shared_communication', 'commands.csv');
+final String SHARED_CSV_PATH = r'D:\AppCommunication\commands.csv';
 // final String SHARED_CSV_PATH = '/Users/yourusername/path/to/your/project/shared_communication/commands.csv'; // Example absolute path for testing
 
 class Command {
@@ -87,7 +87,7 @@ class CommandService {
     try {
       final csvString = await file.readAsString();
       final List<List<dynamic>> rowsAsListOfValues = const CsvToListConverter(eol: '\n', fieldDelimiter: ',').convert(csvString);
-
+      
       if (rowsAsListOfValues.isEmpty) {
         return []; // Empty file or only header
       }

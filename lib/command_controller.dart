@@ -1,4 +1,4 @@
-import 'command_service.dart';
+import 'command_service.dart'; 
 // Import sub_command_handlers.dart once it's created
 // For now, we'll define a placeholder for where SayHelloSubCommandHandler would be.
 import 'sub_command_handlers.dart'; // Assuming this will be created next
@@ -6,7 +6,7 @@ import 'sub_command_handlers.dart'; // Assuming this will be created next
 class CommandController {
   final CommandService _commandService;
   // In a real app, you might have a map or a factory for handlers
-  // Map<String, SubCommandHandler> _handlers = {};
+  // Map<String, SubCommandHandler> _handlers = {}; 
 
   CommandController(this._commandService) {
     // Initialize handlers, e.g.:
@@ -15,12 +15,12 @@ class CommandController {
 
   Future<void> processCommand(Command command) async {
     print('CommandController: Processing command ${command.commandName} (ID: ${command.timestamp})');
-
+    
     SubCommandHandler? handler;
 
     // Simple routing for now
     if (command.commandName == 'say_hello') {
-      handler = SayHelloSubCommandHandler();
+      handler = SayHelloSubCommandHandler(); 
     } else if (command.commandName == 'echo') { // Add this case
       handler = EchoSubCommandHandler();
     } else {

@@ -14,7 +14,7 @@ class SayHelloSubCommandHandler implements SubCommandHandler {
   Future<Map<String, String>> execute(String payload) async {
     // Simulate some work or interaction
     print('Flutter (SayHelloSubCommandHandler): Executing say_hello. Payload: "$payload"');
-
+    
     // Perform the action for "say_hello"
     // For example, just log to console and return a success message.
     String message = 'Flutter executed say_hello successfully.';
@@ -37,7 +37,7 @@ class EchoSubCommandHandler implements SubCommandHandler {
   @override
   Future<Map<String, String>> execute(String payload) async {
     print('Flutter (EchoSubCommandHandler): Executing echo. Payload: "$payload"');
-
+    
     // Simply echo the payload back
     await Future.delayed(const Duration(milliseconds: 50)); // Simulate work
 
